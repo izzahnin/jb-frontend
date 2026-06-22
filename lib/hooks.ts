@@ -6,7 +6,8 @@ import { login as apiLogin, logout as apiLogout } from './api';
 export interface User {
   id: number;
   username: string;
-  role: 'admin' | 'customer';
+  full_name: string;
+  role: 'super_admin' | 'admin_sales' | 'admin_ops';
   is_active: boolean;
   created_at: string;
 }
@@ -34,6 +35,11 @@ export function useAuth() {
       try {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+        
+        // Ensure cookies are set if localStorage exists
+        document.cookie = `token=${storedToken}; path=/; max-age=86400; SameSite=Strict`;
+        const parsed = JSON.parse(storedUser);
+        document.cookie = `role=${parsed.role}; path=/; max-age=86400; SameSite=Strict`;
       } catch (error) {
         console.error('Failed to restore auth state:', error);
         localStorage.removeItem('token');
@@ -48,22 +54,22 @@ export function useAuth() {
     try {
       const response = await apiLogin(username, password);
       
-      if (!response.token) {
+      if (!response.token || !response.user) {
         throw new Error('No token received');
       }
 
-      const userData: User = {
-        id: response.user_id || 0,
-        username: response.username || username,
-        role: 'admin',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      };
+      const userData: User = response.user;
 
       setToken(response.token);
       setUser(userData);
+      
+      // Save to localStorage for client-side persistence
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Save to cookies for server-side middleware
+      document.cookie = `token=${response.token}; path=/; max-age=86400; SameSite=Strict`;
+      document.cookie = `role=${userData.role}; path=/; max-age=86400; SameSite=Strict`;
     } finally {
       setLoading(false);
     }
@@ -80,6 +86,11 @@ export function useAuth() {
       setUser(null);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      
+      // Remove from cookies
+      document.cookie = 'token=; path=/; max-age=0; SameSite=Strict';
+      document.cookie = 'role=; path=/; max-age=0; SameSite=Strict';
+      
       setLoading(false);
     }
   }, []);
