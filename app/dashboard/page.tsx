@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { getDashboardStats, DashboardStatsResponse } from '@/lib/api';
+import { useAuth } from '@/lib/hooks';
 
 // SVG icons as tiny components
 function IconBox() {
@@ -71,6 +72,8 @@ const STAT_CARDS = (stats: DashboardStatsResponse) => [
     icon: <IconBox />,
     iconBg: 'bg-blue-600',
     trend: `${stats.order_breakdown.pending} pending`,
+    badge: { label: '↑ Aktif', cls: 'bg-blue-50 text-blue-600' },
+    progress: null,
   },
   {
     label: 'Truck Aktif',
@@ -78,6 +81,8 @@ const STAT_CARDS = (stats: DashboardStatsResponse) => [
     icon: <IconTruck />,
     iconBg: 'bg-emerald-600',
     trend: `dari ${stats.total_trucks} total`,
+    badge: { label: '● On Duty', cls: 'bg-emerald-50 text-emerald-600' },
+    progress: stats.total_trucks > 0 ? Math.round((stats.active_trucks / stats.total_trucks) * 100) : 0,
   },
   {
     label: 'Total User',
@@ -85,6 +90,8 @@ const STAT_CARDS = (stats: DashboardStatsResponse) => [
     icon: <IconUsers />,
     iconBg: 'bg-violet-600',
     trend: null,
+    badge: null,
+    progress: null,
   },
   {
     label: 'Admin',
@@ -92,6 +99,8 @@ const STAT_CARDS = (stats: DashboardStatsResponse) => [
     icon: <IconShield />,
     iconBg: 'bg-orange-600',
     trend: null,
+    badge: null,
+    progress: null,
   },
 ];
 
@@ -154,10 +163,18 @@ function DeniedToastHandler() {
   return null;
 }
 
+const DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+function formatDate(d: Date) {
+  return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     getDashboardStats()
@@ -166,15 +183,35 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const today = formatDate(new Date());
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <Suspense fallback={null}>
         <DeniedToastHandler />
       </Suspense>
-      {/* Page title */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
-        <p className="text-slate-500 text-sm mt-1">Ringkasan operasional Jalur Berlian.</p>
+
+      {/* Welcome Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
+        <div className="relative z-10 flex items-start justify-between">
+          <div>
+            <p className="text-blue-200 text-xs font-medium uppercase tracking-widest mb-1">PT. Jalur Berlian Makassar</p>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Selamat datang{user?.full_name ? `, ${user.full_name.charAt(0).toUpperCase() + user.full_name.slice(1)}` : ''} 👋
+            </h1>
+            <p className="text-blue-200 text-sm mt-1">Sistem Manajemen Fleet &amp; Order</p>
+          </div>
+          <div className="text-right shrink-0 ml-4">
+            <p className="text-blue-200 text-sm">{today}</p>
+            {/* <div className="mt-2 flex items-center gap-1.5 justify-end">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs text-emerald-300 font-medium">Sistem Aktif</span>
+            </div> */}
+          </div>
+        </div>
+        {/* Decorative circles */}
+        <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/5" />
+        <div className="absolute -right-4 -bottom-12 w-56 h-56 rounded-full bg-white/5" />
       </div>
 
       {/* Stat Cards */}
@@ -193,8 +230,15 @@ export default function DashboardPage() {
             : stats
             ? STAT_CARDS(stats).map((card) => (
                 <div key={card.label} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
-                  <div className={`w-9 h-9 rounded-xl ${card.iconBg} flex items-center justify-center text-white mb-4`}>
-                    {card.icon}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-9 h-9 rounded-xl ${card.iconBg} flex items-center justify-center text-white`}>
+                      {card.icon}
+                    </div>
+                    {card.badge && (
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${card.badge.cls}`}>
+                        {card.badge.label}
+                      </span>
+                    )}
                   </div>
                   <p className="text-3xl font-bold text-slate-900">{card.value}</p>
                   <p className="text-sm text-slate-500 mt-1">{card.label}</p>
@@ -218,10 +262,10 @@ export default function DashboardPage() {
               { label: 'Completed', value: stats.order_breakdown.completed, cls: 'bg-green-100 text-green-700' },
               { label: 'Cancelled', value: stats.order_breakdown.cancelled, cls: 'bg-red-100 text-red-700' },
             ].map(({ label, value, cls }) => (
-              <div key={label} className={`rounded-xl px-4 py-3 ${cls}`}>
-                <p className="text-xl font-bold">{value}</p>
-                <p className="text-xs font-medium mt-0.5">{label}</p>
-              </div>
+                <div key={label} className={`rounded-xl px-4 py-3 ${cls}`}>
+                  <p className="text-xl font-bold">{value}</p>
+                  <p className="text-xs font-medium mt-0.5">{label}</p>
+                </div>
             ))}
           </div>
         </div>

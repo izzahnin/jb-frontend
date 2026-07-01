@@ -149,7 +149,7 @@ export default function DriversPage() {
     <div className="space-y-6">
       <PageHeader
         title="Drivers"
-        description="Master data pengemudi untuk dispatch trip"
+        description="Kelola data pengemudi yang bertugas mengoperasikan armada."
         action={{ label: 'Driver Baru', onClick: () => { resetForm(); setShowForm(true); } }}
       />
 

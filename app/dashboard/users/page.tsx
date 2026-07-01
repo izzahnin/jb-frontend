@@ -138,7 +138,7 @@ export default function UsersPage() {
     <div className="space-y-6">
       <PageHeader
         title="Users"
-        description="Manajemen akun admin sistem"
+        description="Kelola akun dan hak akses administrator sistem."
         action={{ label: 'User Baru', onClick: () => setShowForm((p) => !p) }}
       />
 

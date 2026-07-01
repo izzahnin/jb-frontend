@@ -145,7 +145,10 @@ export function Sidebar() {
           </svg>
         </div>
         {!collapsed && (
-          <span className="text-sm font-semibold text-white tracking-tight truncate">Jalur Berlian</span>
+          <div className="flex flex-col leading-none">
+            <span className="text-sm font-semibold text-white tracking-tight">Jalur Berlian</span>
+            <span className="text-[10px] text-slate-500 tracking-widest uppercase mt-0.5">Fleet Management</span>
+          </div>
         )}
         {/* Collapse toggle — only on lg+ */}
         {!collapsed && (

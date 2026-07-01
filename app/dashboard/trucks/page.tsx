@@ -144,7 +144,7 @@ export default function TrucksPage() {
     <div className="space-y-6">
       <PageHeader
         title="Trucks"
-        description="Manajemen armada kendaraan"
+        description="Pantau dan kelola seluruh armada kendaraan operasional."
         action={{ label: 'Truck Baru', onClick: () => { resetForm(); setShowForm(true); } }}
       />
 

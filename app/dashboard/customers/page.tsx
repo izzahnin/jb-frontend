@@ -156,7 +156,7 @@ export default function CustomersPage() {
     <div className="space-y-6">
       <PageHeader
         title="Customers"
-        description="Master data customer untuk pembuatan order"
+        description="Kelola data perusahaan pelanggan beserta informasi kontak dan NPWP."
         action={{ label: 'Customer Baru', onClick: () => { resetForm(); setShowForm(true); } }}
       />
 

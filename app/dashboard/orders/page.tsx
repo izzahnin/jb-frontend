@@ -225,7 +225,7 @@ export default function OrdersPage() {
     <div className="space-y-6">
       <PageHeader
         title="Orders"
-        description="Kelola pengiriman — 1 order = 1 kontainer"
+        description="Buat dan pantau seluruh order pengiriman barang pelanggan."
         action={{ label: 'Order Baru', onClick: () => { resetForm(); setShowForm(true); } }}
       />
 

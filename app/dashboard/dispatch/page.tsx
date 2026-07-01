@@ -190,7 +190,7 @@ export default function DispatchPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <PageHeader title="Dispatch" description="Buat, mulai, dan selesaikan trip pengiriman." />
+        <PageHeader title="Dispatch" description="Kelola eksekusi trip — dari keberangkatan hingga pengiriman selesai." />
         <div className="flex flex-wrap gap-2 mt-2">
           {[
             { label: 'Total', value: stats.total, cls: 'bg-slate-100 text-slate-700' },
