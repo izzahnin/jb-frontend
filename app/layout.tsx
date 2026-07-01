@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Jalur Berlian - Fleet Management',
-  description: 'Real-time fleet management and order tracking system',
+  description: 'Fleet and order management system for PT. Jalur Berlian Makassar — container shipment tracking, driver & truck dispatch, and GPS-based delivery monitoring.',
 };
 
 export default function RootLayout({
