@@ -139,9 +139,9 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className={`flex items-center h-14 px-3 border-b border-slate-800 shrink-0 ${collapsed ? 'justify-center' : 'gap-2.5'}`}>
-        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
-          <svg className="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ width: '18px', height: '18px' }}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+        <div className="shrink-0 flex items-center justify-center" style={{ width: '36px', height: '24px' }}>
+          <svg viewBox="0 0 114 75" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%' }}>
+            <path d="M9 56.5H2.5L15 44L27.5 56.5H20.5C20.5 65 20.5 65 33 65C44.5109 65 44.5 65 44.5 57V13V10.5H37.5L57 1.5L76 10.5H69V13V32.5H97C101 32.5 101 32.5 101 26.5C101 20.5 101 20.5 97 20.5H80V23L69.5 16L80 9.5V11.5H101C106 11.5 112.5 15 112.5 26C112.5 37 106 41 101 41H69V64.5H97C101 64.5 101 64.5 101 58C101 51.5 101 52 97 52H80V54.5L69.5 48L80 41.5V44H101C105.5 44 112.5 46.5 112.5 58C112.5 69.5 107.5 73.5 101 73.5H57.5V13H56V60C56 66.75 51.2473 73.5 40 73.5H23C17.7093 73.5 9 68.5 9 62V56.5Z" fill="#FFD00F"/>
           </svg>
         </div>
         {!collapsed && (

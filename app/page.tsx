@@ -71,7 +71,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-10 px-4">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-blue-50 py-10 px-4">
       <div className="max-w-lg mx-auto space-y-6">
 
         {/* Branding */}

@@ -67,11 +67,11 @@ function IconArrow() {
 
 const STAT_CARDS = (stats: DashboardStatsResponse) => [
   {
-    label: 'Total Order',
+    label: 'Order Aktif',
     value: stats.total_orders,
     icon: <IconBox />,
     iconBg: 'bg-blue-600',
-    trend: `${stats.order_breakdown.pending} pending`,
+    trend: `dari ${stats.order_breakdown.pending + stats.order_breakdown.partial + stats.order_breakdown.completed + stats.order_breakdown.cancelled} total order`,
     badge: { label: '↑ Aktif', cls: 'bg-blue-50 text-blue-600' },
     progress: null,
   },
@@ -192,7 +192,7 @@ export default function DashboardPage() {
       </Suspense>
 
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-indigo-700 p-6 text-white">
         <div className="relative z-10 flex items-start justify-between">
           <div>
             <p className="text-blue-200 text-xs font-medium uppercase tracking-widest mb-1">PT. Jalur Berlian Makassar</p>
