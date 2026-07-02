@@ -69,7 +69,7 @@ export default function ProfilePage() {
 
   return (
     <ProtectedRoute>
-      <PageHeader title="Profil Saya" subtitle="Kelola informasi akun Anda" />
+      <PageHeader title="Profil Saya" description="Kelola informasi akun Anda" />
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
 
