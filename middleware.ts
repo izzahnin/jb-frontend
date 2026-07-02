@@ -37,8 +37,8 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // Role-based access check
-    if (role) {
+    // Role-based access check — demo role bypasses all restrictions (read-only via API)
+    if (role && role !== 'demo') {
       for (const [route, allowedRoles] of Object.entries(ROLE_ROUTES)) {
         if (pathname.startsWith(route) && !allowedRoles.includes(role)) {
           return NextResponse.redirect(new URL('/dashboard?denied=1', request.url));

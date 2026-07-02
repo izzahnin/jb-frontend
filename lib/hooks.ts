@@ -16,7 +16,7 @@ export interface User {
   id: number;
   username: string;
   full_name: string;
-  role: 'super_admin' | 'admin_sales' | 'admin_ops';
+  role: 'super_admin' | 'admin_sales' | 'admin_ops' | 'demo';
   is_active: boolean;
   created_at: string;
 }

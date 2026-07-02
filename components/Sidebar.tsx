@@ -9,6 +9,7 @@ const ROLE_LABEL: Record<string, string> = {
   super_admin: 'Super Admin',
   admin_sales: 'Sales',
   admin_ops: 'Ops',
+  demo: 'Demo',
 };
 
 type NavItem = {
@@ -165,7 +166,7 @@ export function Sidebar() {
       {/* Nav links */}
       <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
         {NAV_ITEMS.map(({ href, label, exact, roles, icon }) => {
-          const disabled = roles !== undefined && !roles.includes(user.role);
+          const disabled = roles !== undefined && !roles.includes(user.role) && user.role !== 'demo';
           const active = !disabled && isActive(href, exact);
           const baseClass = `flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm font-medium transition-colors ${collapsed ? 'justify-center' : ''}`;
           if (disabled) {

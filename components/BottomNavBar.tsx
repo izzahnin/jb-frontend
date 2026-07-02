@@ -120,7 +120,7 @@ export function BottomNavBar() {
       {moreOpen && (
         <div className="md:hidden fixed bottom-13 left-0 right-0 z-50 bg-slate-900 border-t border-slate-800 shadow-2xl">
           {MORE_ITEMS.map(({ href, label, roles, icon }) => {
-            const disabled = roles !== undefined && !roles.includes(user.role);
+            const disabled = roles !== undefined && !roles.includes(user.role) && user.role !== 'demo';
             if (disabled) {
               return (
                 <span

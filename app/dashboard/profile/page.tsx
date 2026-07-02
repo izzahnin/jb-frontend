@@ -11,12 +11,14 @@ const ROLE_LABEL: Record<string, string> = {
   super_admin: 'Super Admin',
   admin_sales: 'Admin Sales',
   admin_ops: 'Admin Ops',
+  demo: 'Demo',
 };
 
 const ROLE_COLOR: Record<string, string> = {
   super_admin: 'bg-purple-100 text-purple-700',
   admin_sales: 'bg-blue-100 text-blue-700',
   admin_ops: 'bg-emerald-100 text-emerald-700',
+  demo: 'bg-amber-100 text-amber-700',
 };
 
 export default function ProfilePage() {

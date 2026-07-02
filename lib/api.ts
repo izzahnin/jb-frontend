@@ -1,6 +1,6 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
-export type UserRole = 'super_admin' | 'admin_sales' | 'admin_ops';
+export type UserRole = 'super_admin' | 'admin_sales' | 'admin_ops' | 'demo';
 
 export interface UserResponse {
   id: number;
@@ -34,6 +34,21 @@ export async function apiCall<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
+  // Block mutations for demo role
+  if (options.method && options.method !== 'GET') {
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const u = JSON.parse(storedUser);
+          if (u.role === 'demo') throw new Error('Mode Demo: tidak dapat membuat perubahan.');
+        } catch (e) {
+          if (e instanceof Error && e.message.startsWith('Mode Demo')) throw e;
+        }
+      }
+    }
+  }
+
   const url = `${API_URL}${endpoint}`;
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
