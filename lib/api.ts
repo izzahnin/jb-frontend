@@ -61,13 +61,15 @@ export async function apiCall<T = unknown>(
 
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        document.cookie = 'token=; path=/; max-age=0; SameSite=Strict';
-        document.cookie = 'role=; path=/; max-age=0; SameSite=Strict';
-        window.location.href = '/login';
+        const hasSession = !!localStorage.getItem('token');
+        if (hasSession) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          document.cookie = 'token=; path=/; max-age=0; SameSite=Strict';
+          window.location.href = '/login';
+        }
       }
-      throw new Error('Sesi berakhir. Silakan login kembali.');
+      throw new Error(data.error || 'Sesi berakhir. Silakan login kembali.');
     }
 
     if (!response.ok) {
@@ -125,6 +127,25 @@ export async function deleteUser(id: number) {
   return apiCall(`/admin/users/${id}`, { method: 'DELETE' });
 }
 
+export async function resetUserPassword(id: number, newPassword: string) {
+  return apiCall(`/admin/users/${id}/password`, {
+    method: 'PATCH',
+    body: JSON.stringify({ new_password: newPassword }),
+  });
+}
+
+export interface UpdateProfileRequest {
+  full_name?: string;
+  password?: string;
+}
+
+export async function updateProfile(payload: UpdateProfileRequest) {
+  return apiCall<{ message: string; user: UserResponse }>('/admin/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
 // Customers APIs
 export interface CustomerResponse {
   id: number;
@@ -143,8 +164,8 @@ export interface CustomerResponse {
   updated_by_name?: string;
 }
 
-export async function getCustomers() {
-  return apiCall<CustomerResponse[]>('/admin/customers', {
+export async function getCustomers(limit = 100, offset = 0) {
+  return apiCall<CustomerResponse[]>(`/admin/customers?limit=${limit}&offset=${offset}`, {
     method: 'GET',
   });
 }
@@ -187,8 +208,8 @@ export interface DriverResponse {
   updated_by_name?: string;
 }
 
-export async function getDrivers() {
-  return apiCall<DriverResponse[]>('/admin/drivers', {
+export async function getDrivers(limit = 100, offset = 0) {
+  return apiCall<DriverResponse[]>(`/admin/drivers?limit=${limit}&offset=${offset}`, {
     method: 'GET',
   });
 }
@@ -228,7 +249,7 @@ export interface TruckResponse {
   updated_by_name?: string;
 }
 
-export async function getTrucks(offset = 0, limit = 10) {
+export async function getTrucks(offset = 0, limit = 100) {
   return apiCall<TruckResponse[]>(`/admin/trucks?offset=${offset}&limit=${limit}`, {
     method: 'GET',
   });

@@ -210,7 +210,12 @@ export function Sidebar() {
       {/* User info + logout */}
       <div className={`border-t border-slate-800 p-2 shrink-0 ${collapsed ? '' : ''}`}>
         {!collapsed ? (
-          <div className="flex items-center gap-2.5 px-2 py-2 mb-1">
+          <Link
+            href="/dashboard/profile"
+            className={`flex items-center gap-2.5 px-2 py-2 mb-1 rounded-lg transition-colors cursor-pointer ${
+              pathname.startsWith('/dashboard/profile') ? 'bg-slate-800' : 'hover:bg-slate-800/60'
+            }`}
+          >
             <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300 shrink-0">
               {user.username.charAt(0).toUpperCase()}
             </div>
@@ -218,13 +223,19 @@ export function Sidebar() {
               <p className="text-xs font-semibold text-white truncate">{user.username}</p>
               <p className="text-xs text-slate-500 truncate">{ROLE_LABEL[user.role] ?? user.role}</p>
             </div>
-          </div>
+          </Link>
         ) : (
-          <div className="flex justify-center py-1 mb-1">
-            <div title={user.username} className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300">
+          <Link
+            href="/dashboard/profile"
+            title={user.username}
+            className={`flex justify-center py-1 mb-1 rounded-lg transition-colors ${
+              pathname.startsWith('/dashboard/profile') ? 'bg-slate-800' : 'hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300">
               {user.username.charAt(0).toUpperCase()}
             </div>
-          </div>
+          </Link>
         )}
         <button
           onClick={handleLogout}

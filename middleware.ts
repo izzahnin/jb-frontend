@@ -10,9 +10,20 @@ const ROLE_ROUTES: Record<string, string[]> = {
   '/dashboard/users':     ['super_admin'],
 };
 
+// Decode role dari JWT payload — tidak perlu verify signature, hanya baca claim.
+// Aman di Edge Runtime (tidak butuh library crypto).
+function getRoleFromToken(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.role === 'string' ? payload.role : null;
+  } catch {
+    return null;
+  }
+}
+
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
-  const role  = request.cookies.get('role')?.value;
+  const role  = token ? getRoleFromToken(token) : null;
   const { pathname } = request.nextUrl;
 
   // Public routes — allow everyone

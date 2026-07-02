@@ -1,7 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { login as apiLogin, logout as apiLogout } from './api';
+
+function getTokenExp(token: string): number | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.exp === 'number' ? payload.exp : null;
+  } catch {
+    return null;
+  }
+}
 
 export interface User {
   id: number;
@@ -19,27 +28,47 @@ export interface AuthContextType {
   isSignedIn: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (partial: Partial<User>) => void;
 }
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const expiryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleAutoLogout = useCallback((tok: string, logoutFn: () => void) => {
+    const exp = getTokenExp(tok);
+    if (!exp) return;
+    const msRemaining = exp * 1000 - Date.now() - 30_000; // logout 30 detik sebelum expire
+    if (expiryTimeoutRef.current) clearTimeout(expiryTimeoutRef.current);
+    if (msRemaining <= 0) {
+      logoutFn();
+      return;
+    }
+    expiryTimeoutRef.current = setTimeout(logoutFn, msRemaining);
+  }, []);
 
   // Initialize from localStorage on mount
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    
+
     if (storedToken && storedUser) {
       try {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
-        
-        // Ensure cookies are set if localStorage exists
+
+        // Ensure token cookie is set if localStorage exists (dibutuhkan middleware server-side)
         document.cookie = `token=${storedToken}; path=/; max-age=86400; SameSite=Strict`;
-        const parsed = JSON.parse(storedUser);
-        document.cookie = `role=${parsed.role}; path=/; max-age=86400; SameSite=Strict`;
+        document.cookie = 'role=; path=/; max-age=0; SameSite=Strict';
+
+        scheduleAutoLogout(storedToken, () => {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          document.cookie = 'token=; path=/; max-age=0; SameSite=Strict';
+          window.location.href = '/login';
+        });
       } catch (error) {
         console.error('Failed to restore auth state:', error);
         localStorage.removeItem('token');
@@ -47,7 +76,7 @@ export function useAuth() {
       }
     }
     setLoading(false);
-  }, []);
+  }, [scheduleAutoLogout]);
 
   const login = useCallback(async (username: string, password: string) => {
     setLoading(true);
@@ -67,15 +96,26 @@ export function useAuth() {
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(userData));
       
-      // Save to cookies for server-side middleware
+      // Save token cookie for server-side middleware (role di-decode dari JWT payload)
       document.cookie = `token=${response.token}; path=/; max-age=86400; SameSite=Strict`;
-      document.cookie = `role=${userData.role}; path=/; max-age=86400; SameSite=Strict`;
+      document.cookie = 'role=; path=/; max-age=0; SameSite=Strict';
+
+      scheduleAutoLogout(response.token, () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        document.cookie = 'token=; path=/; max-age=0; SameSite=Strict';
+        window.location.href = '/login';
+      });
     } finally {
       setLoading(false);
     }
   }, []);
 
   const logout = useCallback(async () => {
+    if (expiryTimeoutRef.current) {
+      clearTimeout(expiryTimeoutRef.current);
+      expiryTimeoutRef.current = null;
+    }
     setLoading(true);
     try {
       await apiLogout();
@@ -87,12 +127,21 @@ export function useAuth() {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       
-      // Remove from cookies
+      // Remove token + legacy role cookie
       document.cookie = 'token=; path=/; max-age=0; SameSite=Strict';
       document.cookie = 'role=; path=/; max-age=0; SameSite=Strict';
       
       setLoading(false);
     }
+  }, []);
+
+  const updateUser = useCallback((partial: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...partial };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
   }, []);
 
   return {
@@ -102,5 +151,6 @@ export function useAuth() {
     isSignedIn: !!token,
     login,
     logout,
+    updateUser,
   };
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { toast } from 'react-toastify';
-import { getUsers, createUser, deleteUser, UserResponse } from '@/lib/api';
+import { getUsers, createUser, deleteUser, resetUserPassword, UserResponse } from '@/lib/api';
 import { useAuth } from '@/lib/hooks';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
@@ -32,6 +32,10 @@ export default function UsersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({ open: false, title: '', message: '', onConfirm: () => {} });
+  const [resetModal, setResetModal] = useState<{ open: boolean; userId: number; username: string } | null>(null);
+  const [resetPassword, setResetPassword] = useState('');
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     full_name: '',
@@ -66,6 +70,22 @@ export default function UsersPage() {
       toast.error(err instanceof Error ? err.message : 'Gagal membuat user');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetModal) return;
+    setResetting(true);
+    try {
+      await resetUserPassword(resetModal.userId, resetPassword);
+      setResetModal(null);
+      setResetPassword('');
+      toast.success(`Password "${resetModal.username}" berhasil direset`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal mereset password');
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -126,9 +146,14 @@ export default function UsersPage() {
         if (currentUser?.id === u.id) return null;
         if (!u.is_active) return <span className="text-xs text-slate-400">Nonaktif</span>;
         return (
-          <button onClick={() => handleDelete(u.id, u.username)} className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors">
-            Nonaktifkan
-          </button>
+          <div className="flex gap-1.5">
+            <button onClick={() => { setResetModal({ open: true, userId: u.id, username: u.username }); setResetPassword(''); setShowResetPassword(false); }} className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors">
+              Reset Password
+            </button>
+            <button onClick={() => handleDelete(u.id, u.username)} className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors">
+              Nonaktifkan
+            </button>
+          </div>
         );
       },
     },
@@ -236,6 +261,54 @@ export default function UsersPage() {
         onConfirm={confirmModal.onConfirm}
         onClose={() => setConfirmModal(m => ({ ...m, open: false }))}
       />
+
+      {resetModal?.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-slate-900">Reset Password</h3>
+              <button onClick={() => setResetModal(null)} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <p className="text-sm text-slate-500 mb-4">
+              Reset password untuk <span className="font-mono font-semibold text-slate-800">{resetModal.username}</span>.
+            </p>
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div>
+                <label className={labelCls}>Password Baru <span className="text-red-400">*</span></label>
+                <div className="relative">
+                  <input
+                    type={showResetPassword ? 'text' : 'password'}
+                    placeholder="Minimal 6 karakter"
+                    value={resetPassword}
+                    onChange={(e) => setResetPassword(e.target.value)}
+                    className={inputCls + ' pr-11'}
+                    autoComplete="new-password"
+                    required
+                    minLength={6}
+                    autoFocus
+                  />
+                  <button type="button" onClick={() => setShowResetPassword(!showResetPassword)} tabIndex={-1} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                    {showResetPassword
+                      ? <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+                      : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    }
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button type="submit" disabled={resetting} className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
+                  {resetting ? 'Mereset...' : 'Reset Password'}
+                </button>
+                <button type="button" onClick={() => setResetModal(null)} className="px-4 py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded-xl transition-colors">
+                  Batal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

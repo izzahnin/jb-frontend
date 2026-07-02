@@ -30,21 +30,13 @@ Dokumen ini mencatat keterbatasan teknis, masalah yang diketahui, dan daftar imp
 
 ---
 
-### 5. Token Expiry Hanya Dideteksi Saat Ada API Request
-**Masalah:** Token expired tidak dideteksi secara aktif. User bisa tetap di halaman dashboard tanpa tahu session sudah berakhir — sampai ada interaksi yang trigger API call dan mendapat 401.
-
-**Penanganan saat ini:** API interceptor di `lib/api.ts` mendeteksi 401 dan auto-redirect ke `/login`.
-
-**Solusi di masa depan:** Decode JWT expiry (`exp` claim) di client dan set timer/interval untuk auto-logout sebelum token benar-benar expired. Atau implementasi refresh token di backend.
+### ~~5. Token Expiry Hanya Dideteksi Saat Ada API Request~~ ✅ RESOLVED
+**Diselesaikan:** `useAuth()` di `lib/hooks.ts` kini decode `exp` claim dari JWT payload saat login dan saat mount (restore dari localStorage). Timer `setTimeout` dijadwalkan untuk auto-logout 30 detik sebelum token expire. Timer dibersihkan saat manual logout.
 
 ---
 
-### 6. Cookie `role` Disimpan Plaintext
-**Masalah:** Cookie `role` yang digunakan middleware Next.js untuk RBAC routing disimpan sebagai plaintext (misal: `role=admin_ops`). User bisa mengedit cookie ini di browser untuk bypass redirect middleware.
-
-**Dampak aktual:** Rendah — backend tetap validasi JWT dan role dari token. Middleware hanya untuk UX (redirect), bukan keamanan sesungguhnya. Jika admin_ops paksa akses `/dashboard/orders`, request API akan tetap ditolak backend dengan 403.
-
-**Solusi di masa depan:** Encode role dalam JWT claim dan decode di middleware menggunakan Edge-compatible JWT library, sehingga tidak perlu cookie `role` terpisah.
+### ~~6. Cookie `role` Disimpan Plaintext~~ ✅ RESOLVED
+**Diselesaikan:** `middleware.ts` kini decode `role` langsung dari JWT payload (`atob` + `JSON.parse` — aman di Edge Runtime, tanpa library tambahan). Cookie `role` dihapus sepenuhnya dari `hooks.ts` dan `lib/api.ts`. Hanya cookie `token` yang tersisa.
 
 ---
 
@@ -66,10 +58,8 @@ Dokumen ini mencatat keterbatasan teknis, masalah yang diketahui, dan daftar imp
 
 ---
 
-### 9. Tidak Ada Error Boundary
-**Masalah:** Jika komponen React melempar error yang tidak tertangkap (misalnya saat parsing data dari API), seluruh halaman akan crash dengan pesan error generik.
-
-**Solusi di masa depan:** Tambah `ErrorBoundary` component di `app/dashboard/layout.tsx` atau di level halaman.
+### ~~9. Tidak Ada Error Boundary~~ ✅ RESOLVED
+**Diselesaikan:** `components/ErrorBoundary.tsx` dibuat (class component) dan di-wrap di `app/dashboard/layout.tsx` — menampilkan pesan error friendly + tombol "Muat Ulang" daripada blank screen.
 
 ---
 
@@ -82,10 +72,8 @@ Dokumen ini mencatat keterbatasan teknis, masalah yang diketahui, dan daftar imp
 
 ---
 
-### 11. Tidak Ada Loading State Global
-**Masalah:** Setiap halaman manage state loading sendiri. Tidak ada loading indicator global saat navigasi antar halaman.
-
-**Solusi di masa depan:** Gunakan Next.js `loading.tsx` di setiap route segment, atau tambah NProgress bar di root layout.
+### ~~11. Tidak Ada Loading State Global~~ ✅ RESOLVED
+**Diselesaikan:** `app/dashboard/loading.tsx` ditambah — Next.js App Router otomatis menampilkan spinner saat navigasi ke route dashboard yang sedang load data async.
 
 ---
 
@@ -100,6 +88,15 @@ Dokumen ini mencatat keterbatasan teknis, masalah yang diketahui, dan daftar imp
 | 2026-06 | Audit trail Trip: tampilkan nama admin yang memulai dan menyelesaikan trip |
 | 2026-06 | Audit trail: timestamp `created_at` & `updated_at` untuk Customer, Truck, Driver, Order |
 | 2026-06 | `init.sql` diperbarui — semua kolom audit trail ada sejak awal (reset DB bersih) |
+| 2026-07 | Error boundary global — `components/ErrorBoundary.tsx` wrap semua halaman dashboard |
+| 2026-07 | Auto-logout proaktif — decode JWT `exp`, schedule timer 30 detik sebelum expire |
+| 2026-07 | Global loading state — `app/dashboard/loading.tsx` spinner saat navigasi |
+| 2026-07 | Reset password admin — tombol "Reset Password" di halaman Users (super_admin) |
+| 2026-07 | Cookie `role` dieliminasi — middleware decode role dari JWT payload langsung |
+| 2026-07 | Pagination limit/offset — `getCustomers`, `getDrivers`, `getTrucks` default limit 100 |
+| 2026-07 | Halaman Profil self-service — user bisa ubah `full_name` dan password sendiri via `PATCH /admin/profile` |
+| 2026-07 | BottomNavBar — tambah Profil link + tombol Keluar di sheet "Lainnya" |
+| 2026-07 | Sidebar — tambah link Profil di footer (di atas tombol Logout) |
 
 ---
 
@@ -108,11 +105,11 @@ Dokumen ini mencatat keterbatasan teknis, masalah yang diketahui, dan daftar imp
 - [x] ~~Tambah `updated_at` di semua model backend~~ — selesai (`init.sql` + repository query)
 - [x] ~~Audit trail Order~~ — selesai (`created_at` + `updated_at` di UI order)
 - [ ] Migrasi `useAuth()` ke React Context
-- [ ] Pagination server-side untuk Customers, Drivers, Trucks
-- [ ] Error boundary global
-- [ ] Loading state global (Next.js `loading.tsx` atau NProgress)
+- [x] ~~Pagination server-side untuk Customers, Drivers, Trucks~~ — selesai (limit/offset params, default 100)
+- [x] ~~Error boundary global~~ — selesai (`components/ErrorBoundary.tsx` + wrap di layout)
+- [x] ~~Loading state global~~ — selesai (`app/dashboard/loading.tsx`)
 - [ ] Wrapper `DynamicLeafletMap` untuk simplifikasi dynamic import
-- [ ] Encode role di JWT claim (eliminasi cookie `role`)
-- [ ] Real-time token expiry detection (decode `exp` claim, set timer)
+- [x] ~~Encode role di JWT claim (eliminasi cookie `role`)~~ — selesai (middleware decode JWT payload, cookie `role` dihapus)
+- [x] ~~Real-time token expiry detection~~ — selesai (decode `exp` + setTimeout di `useAuth`)
 - [ ] Unit test untuk `lib/api.ts` dan `formatNPWP()`
 - [ ] E2E test untuk flow login, CRUD customer, dan dispatch trip
